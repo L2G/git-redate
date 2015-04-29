@@ -21,7 +21,7 @@ def files_to_redate
 end
 
 files_to_redate.each do |file|
-  timestamp = Time.at(%x(git log --no-merges --pretty=%at -1 -- #{file}).to_i)
+  timestamp = Time.at(%x(git log --no-merges --pretty=%at -1 -- "#{file}").to_i)
   if timestamp.to_i > 0
     debug "#{timestamp.strftime('%Y-%m-%d %H:%M:%S')} #{file}"
     File.utime(Time.now, timestamp, file)
