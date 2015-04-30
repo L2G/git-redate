@@ -23,9 +23,13 @@ end
 files_to_redate.each do |file|
   timestamp = Time.at(%x(git log --no-merges --pretty=%at -1 -- "#{file}").to_i)
   if timestamp.to_i > 0
-    debug "#{timestamp.strftime('%Y-%m-%d %H:%M:%S')} #{file}"
-    File.utime(Time.now, timestamp, file)
+    print "#{timestamp.strftime('%Y-%m-%d %H:%M:%S')} #{file}"
+    if File.mtime(file) != timestamp
+      File.utime(Time.now, timestamp, file)
+      print " (changed)"
+    end
+    puts
   else
-    debug "---- not found ---- #{file}"
+    puts "---- not found ---- #{file}"
   end
 end
