@@ -6,7 +6,7 @@ end
 
 def files_to_redate
   files = []
-  if ARGV.empty? 
+  if ARGV.empty?
     output = %x(git ls-tree -r HEAD)
     output.split("\n").each do |tree_entry|
       (data, path) = tree_entry.split("\t")
