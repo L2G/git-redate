@@ -1,7 +1,15 @@
 #!/usr/bin/env ruby
 
-def debug(msg)
+def debug(msg = '')
   $stderr.puts msg
+end
+
+def info(msg = '')
+  debug msg
+end
+
+def info_no_nl(msg = '')
+  $stderr.print msg
 end
 
 def files_to_redate
@@ -20,19 +28,29 @@ def files_to_redate
   end
 end
 
+total = files_to_redate.length
+n = 0
 files_to_redate.each do |file|
+  if total > 100
+    n += 1
+    info_no_nl "Researching timestamps (#{n}/#{total})...\r"
+  end
+
   timestamp = Time.at(
     %x(git log --no-merges --pretty=%at -1 ORIG_HEAD..HEAD -- "#{file}").to_i
   )
 
   if timestamp.to_i > 0
-    print "#{timestamp.strftime('%Y-%m-%d %H:%M:%S')} #{file}"
+    info_no_nl "#{timestamp.strftime('%Y-%m-%d %H:%M:%S')} #{file}"
     if File.mtime(file) != timestamp
       File.utime(Time.now, timestamp, file)
-      print " (changed)"
+      info " (changed)"
+    else
+      info
     end
-    puts
-  else
-    puts "---- not found ---- #{file}"
+#  else
+#    puts "---- not found ---- #{file}"
   end
 end
+
+info
