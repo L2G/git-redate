@@ -38,6 +38,8 @@ class GitRetouch
   def run!
     total = files_to_redate.length
     n = 0
+    git_log_args = '--no-merges --pretty=%at -1 ORIG_HEAD..HEAD'
+
     files_to_redate.each do |file|
       if total > 100
         n += 1
@@ -45,7 +47,7 @@ class GitRetouch
       end
 
       timestamp = Time.at(
-        %x(git log --no-merges --pretty=%at -1 ORIG_HEAD..HEAD -- "#{file}").to_i
+        %x(git log #{git_log_args} -- "#{file}").to_i
       )
 
       if timestamp.to_i > 0
