@@ -28,9 +28,12 @@ class GitRetouch
 
     @options = {}
     GetoptLong.new(
+      ['--debug', '-d', GetoptLong::NO_ARGUMENT ],
       ['--quick', GetoptLong::NO_ARGUMENT ]
     ).each do |opt, _|
       case opt
+      when '--debug'
+        options[:debug] = true
       when '--quick'
         options[:quick] = true
       end
@@ -73,11 +76,11 @@ class GitRetouch
   private
 
   def debug(msg = '')
-    $stderr.puts msg
+    $stderr.puts msg if options[:debug]
   end
 
   def info(msg = '')
-    debug msg
+    $stderr.puts msg
   end
 
   def info_no_nl(msg = '')
