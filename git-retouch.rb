@@ -12,7 +12,7 @@ class GitRetouch
       output = %x(git #{git_opts})
       output.split("\n").each do |tree_entry|
         (data, path) = tree_entry.split("\t")
-        if /^100/.match(data)
+        if /^:?100/.match(data)
           files << path
         end
       end
@@ -71,8 +71,8 @@ class GitRetouch
         else
           info
         end
-    #  else
-    #    puts "---- not found ---- #{file}"
+      else
+        info "---- not found ---- #{file}"
       end
     end
 
