@@ -2,73 +2,81 @@
 
 require "getoptlong" # Ruby stdlib
 
-def debug(msg = '')
-  $stderr.puts msg
-end
+class GitRetouch
+  def files_to_redate
+    files = []
+    if ARGV.empty?
+      output = %x(git ls-tree -r HEAD)
+      output.split("\n").each do |tree_entry|
+        (data, path) = tree_entry.split("\t")
+        if /^100/.match(data)
+          files << path
+        end
+      end
+      files
+    else
+      ARGV.clone
+    end
+  end
 
-def info(msg = '')
-  debug msg
-end
+  def options
+    return @options if @options
 
-def info_no_nl(msg = '')
-  $stderr.print msg
-end
-
-def files_to_redate
-  files = []
-  if ARGV.empty?
-    output = %x(git ls-tree -r HEAD)
-    output.split("\n").each do |tree_entry|
-      (data, path) = tree_entry.split("\t")
-      if /^100/.match(data)
-        files << path
+    @options = {}
+    GetoptLong.new(
+      ['--quick', GetoptLong::NO_ARGUMENT ]
+    ).each do |opt, _|
+      case opt
+      when '--quick'
+        options[:quick] = true
       end
     end
-    files
-  else
-    ARGV.clone
+
+    @options.freeze
   end
-end
 
-def options
-  return @options if @options
+  def run!
+    total = files_to_redate.length
+    n = 0
+    files_to_redate.each do |file|
+      if total > 100
+        n += 1
+        info_no_nl "Researching timestamps (#{n}/#{total})...\r"
+      end
 
-  @options = {}
-  GetoptLong.new(
-    ['--quick', GetoptLong::NO_ARGUMENT ]
-  ).each do |opt, _|
-    case opt
-    when '--quick'
-      options[:quick] = true
+      timestamp = Time.at(
+        %x(git log --no-merges --pretty=%at -1 ORIG_HEAD..HEAD -- "#{file}").to_i
+      )
+
+      if timestamp.to_i > 0
+        info_no_nl "#{timestamp.strftime('%Y-%m-%d %H:%M:%S')} #{file}"
+        if File.mtime(file) != timestamp
+          File.utime(Time.now, timestamp, file)
+          info " (changed)"
+        else
+          info
+        end
+    #  else
+    #    puts "---- not found ---- #{file}"
+      end
     end
+
+    info
   end
 
-  @options.freeze
-end
+  private
 
-total = files_to_redate.length
-n = 0
-files_to_redate.each do |file|
-  if total > 100
-    n += 1
-    info_no_nl "Researching timestamps (#{n}/#{total})...\r"
+  def debug(msg = '')
+    $stderr.puts msg
   end
 
-  timestamp = Time.at(
-    %x(git log --no-merges --pretty=%at -1 ORIG_HEAD..HEAD -- "#{file}").to_i
-  )
+  def info(msg = '')
+    debug msg
+  end
 
-  if timestamp.to_i > 0
-    info_no_nl "#{timestamp.strftime('%Y-%m-%d %H:%M:%S')} #{file}"
-    if File.mtime(file) != timestamp
-      File.utime(Time.now, timestamp, file)
-      info " (changed)"
-    else
-      info
-    end
-#  else
-#    puts "---- not found ---- #{file}"
+  def info_no_nl(msg = '')
+    $stderr.print msg
   end
 end
 
-info
+GitRetouch.new.run!
