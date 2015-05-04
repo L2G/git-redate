@@ -8,7 +8,8 @@ class GitRetouch
 
     files = []
     if ARGV.empty?
-      output = %x(git ls-tree -r HEAD)
+      git_opts = (options[:quick] ? 'diff ORIG_HEAD.. --raw' : 'ls-tree -r HEAD')
+      output = %x(git #{git_opts})
       output.split("\n").each do |tree_entry|
         (data, path) = tree_entry.split("\t")
         if /^100/.match(data)
@@ -49,7 +50,8 @@ class GitRetouch
 
     total = files_to_retouch.length
     n = 0
-    git_log_args = '--no-merges --pretty=%at -1 ORIG_HEAD..HEAD'
+    git_log_args = '--no-merges --pretty=%at -1' +
+      (options[:quick] ? ' ORIG_HEAD..HEAD' : '')
 
     files_to_retouch.each do |file|
       if total > 100
