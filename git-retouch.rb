@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+require "getoptlong" # Ruby stdlib
+
 def debug(msg = '')
   $stderr.puts msg
 end
@@ -26,6 +28,22 @@ def files_to_redate
   else
     ARGV.clone
   end
+end
+
+def options
+  return @options if @options
+
+  @options = {}
+  GetoptLong.new(
+    ['--quick', GetoptLong::NO_ARGUMENT ]
+  ).each do |opt, _|
+    case opt
+    when '--quick'
+      options[:quick] = true
+    end
+  end
+
+  @options.freeze
 end
 
 total = files_to_redate.length
