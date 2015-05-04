@@ -43,6 +43,10 @@ class GitRetouch
   end
 
   def run!
+    debug "Options: " + options.inspect
+    debug "ARGV: " + ARGV.inspect
+    debug
+
     total = files_to_retouch.length
     n = 0
     git_log_args = '--no-merges --pretty=%at -1 ORIG_HEAD..HEAD'
