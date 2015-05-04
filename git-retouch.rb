@@ -3,8 +3,8 @@
 require "getoptlong" # Ruby stdlib
 
 class GitRetouch
-  def files_to_redate
-    return @files_to_redate if @files_to_redate
+  def files_to_retouch
+    return @files_to_retouch if @files_to_retouch
 
     files = []
     if ARGV.empty?
@@ -15,12 +15,12 @@ class GitRetouch
           files << path
         end
       end
-      @files_to_redate = files
+      @files_to_retouch = files
     else
-      @files_to_redate = ARGV.clone
+      @files_to_retouch = ARGV.clone
     end
 
-    @files_to_redate.freeze
+    @files_to_retouch.freeze
   end
 
   def options
@@ -40,11 +40,11 @@ class GitRetouch
   end
 
   def run!
-    total = files_to_redate.length
+    total = files_to_retouch.length
     n = 0
     git_log_args = '--no-merges --pretty=%at -1 ORIG_HEAD..HEAD'
 
-    files_to_redate.each do |file|
+    files_to_retouch.each do |file|
       if total > 100
         n += 1
         info_no_nl "Researching timestamps (#{n}/#{total})...\r"
