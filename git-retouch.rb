@@ -4,6 +4,8 @@ require "getoptlong" # Ruby stdlib
 
 class GitRetouch
   def files_to_redate
+    return @files_to_redate if @files_to_redate
+
     files = []
     if ARGV.empty?
       output = %x(git ls-tree -r HEAD)
@@ -13,10 +15,12 @@ class GitRetouch
           files << path
         end
       end
-      files
+      @files_to_redate = files
     else
-      ARGV.clone
+      @files_to_redate = ARGV.clone
     end
+
+    @files_to_redate.freeze
   end
 
   def options
