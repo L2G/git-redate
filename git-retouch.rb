@@ -51,11 +51,13 @@ class GitRetouch
     total = files_to_retouch.length
     n = 0
     git_log_args = '--no-merges --pretty=%at -1'
+    changes = 0
 
     files_to_retouch.each do |file|
-      if total > 100
+      if total > 100 && !options[:debug]
         n += 1
-        info_no_nl "Researching timestamps (#{n}/#{total})...\r"
+        info_no_nl "Researching timestamps (#{n}/#{total}); "\
+          "changes: #{changes}\r"
       end
 
       timestamp = Time.at(
@@ -63,15 +65,16 @@ class GitRetouch
       )
 
       if timestamp.to_i > 0
-        info_no_nl "#{timestamp.strftime('%Y-%m-%d %H:%M:%S')} #{file}"
+        debug_no_nl "#{timestamp.strftime('%Y-%m-%d %H:%M:%S')} #{file}"
         if File.mtime(file) != timestamp
           File.utime(Time.now, timestamp, file)
-          info " (changed)"
+          debug " (changed)"
+          changes += 1
         else
-          info
+          debug
         end
       else
-        info "---- not found ---- #{file}"
+        debug "---- not found ---- #{file}"
       end
     end
 
@@ -82,6 +85,10 @@ class GitRetouch
 
   def debug(msg = '')
     $stderr.puts msg if options[:debug]
+  end
+
+  def debug_no_nl(msg = '')
+    $stderr.print msg if options[:debug]
   end
 
   def info(msg = '')
