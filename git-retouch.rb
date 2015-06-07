@@ -24,6 +24,10 @@ class GitRetouch
     @files_to_retouch.freeze
   end
 
+  def ignored_commits
+    @ignored_commits ||= %x(git config --get-all retouch.ignoreCommit).split
+  end
+
   def options
     return @options if @options
 
@@ -46,6 +50,9 @@ class GitRetouch
   def run!
     debug "Options: " + options.inspect
     debug "ARGV: " + ARGV.inspect
+    unless ignored_commits.empty?
+      debug "Ignored commits: " + ignored_commits.inspect
+    end
     debug
 
     total = files_to_retouch.length
