@@ -3,6 +3,31 @@
 require "getoptlong" # Ruby stdlib
 
 class GitRetouch
+  def initialize
+    @commit_timestamps = {}
+  end
+
+  def best_commit_for_file(file)
+    catch :done_with_commits do
+      commits_for_file(file).each do |commit|
+        next if ignored_commits.include?(commit)
+        throw :done_with_commits, commit
+      end
+      nil
+    end
+  end
+
+  def commit_timestamp(commit = nil)
+    return nil if commit.nil?
+    @commit_timestamps[commit] ||= Time.at(
+      %x(git log --pretty=%at -1 #{commit}).to_i
+    )
+  end
+
+  def commits_for_file(file)
+    %x(git rev-list HEAD -- "#{file}").split
+  end
+
   def files_to_retouch
     return @files_to_retouch if @files_to_retouch
 
@@ -57,7 +82,6 @@ class GitRetouch
 
     total = files_to_retouch.length
     n = 0
-    git_log_args = '--no-merges --pretty=%at -1'
 
     files_to_retouch.each do |file|
       if total > 100
@@ -65,11 +89,9 @@ class GitRetouch
         info_no_nl "Researching timestamps (#{n}/#{total})...\r"
       end
 
-      timestamp = Time.at(
-        %x(git log #{git_log_args} -- "#{file}").to_i
-      )
+      timestamp = commit_timestamp(best_commit_for_file(file))
 
-      if timestamp.to_i > 0
+      unless timestamp.nil?
         info_no_nl "#{timestamp.strftime('%Y-%m-%d %H:%M:%S')} #{file}"
         if File.mtime(file) != timestamp
           File.utime(Time.now, timestamp, file)
