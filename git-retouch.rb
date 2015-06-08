@@ -94,12 +94,16 @@ class GitRetouch
     files_to_retouch.each do |file|
       if total > 100
         n += 1
-        info_no_nl "Researching timestamps (#{n}/#{total})...\r"
+        researching_message = "Researching timestamps (#{n}/#{total})..."
+        info_no_nl(researching_message + "\r")
       end
 
       timestamp = commit_timestamp(best_commit_for_file(file))
 
       unless timestamp.nil?
+        if researching_message
+          info_no_nl((" " * researching_message.length) + "\r")
+        end
         info_no_nl "#{timestamp.strftime('%Y-%m-%d %H:%M:%S')} #{file}"
         if File.mtime(file) != timestamp
           File.utime(Time.now, timestamp, file)
