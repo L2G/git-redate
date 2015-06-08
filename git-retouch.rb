@@ -8,13 +8,25 @@ class GitRetouch
   end
 
   def best_commit_for_file(file)
-    catch :done_with_commits do
-      commits_for_file(file).each do |commit|
-        next if ignored_commits.include?(commit)
-        throw :done_with_commits, commit
+    commit = nil
+    prev_commit = nil
+
+    loop do
+      if prev_commit.nil?
+        commit = %x(git rev-list HEAD -1 -- "#{file}").chomp
+      else
+        commit = %x(git rev-list #{prev_commit}^ -1 -- "#{file}").chomp
       end
-      nil
+
+      unless ignored_commits.include?(commit) || commit.empty?
+        break
+      end
+
+      prev_commit = commit
     end
+
+    return nil if commit.nil? || commit.empty?
+    commit
   end
 
   def commit_timestamp(commit = nil)
@@ -22,10 +34,6 @@ class GitRetouch
     @commit_timestamps[commit] ||= Time.at(
       %x(git log --pretty=%at -1 #{commit}).to_i
     )
-  end
-
-  def commits_for_file(file)
-    %x(git rev-list HEAD -- "#{file}").split
   end
 
   def files_to_retouch
