@@ -18,7 +18,7 @@ class GitRetouch
         commit = %x(git rev-list #{prev_commit}^ -1 -- "#{file}").chomp
       end
 
-      unless ignored_commits.include?(commit) || commit.empty?
+      if !ignored_commits.include?(commit) || commit.nil? || commit.empty?
         break
       end
 
